@@ -47,9 +47,51 @@ export default {
                 this.play()
             }
         },20)
+         
+         window.addEventListener('resize',()=>{
+             if(!this.sliderBscroll || !this.slider.enabled){
+                 return
+             }
+             clearTimeout(this.resizeTimer)
+             this.resizeTimer = setTimeout(() => {
+                 // 判断当前 scroll 是否处于滚动动画过程中。
+                 if(this.sliderBscroll.isInTransition){
+                     this.onScrollEnd()
+                 } else {
+                     if(this.autoPlay){
+                         this.play()
+                     }
+                 }
+                 this.refresh()
+             },60)
+         })
+    },
+    activated(){
+        //启用 better-scroll, 默认 开启。
+        this.sliderBscroll.enable()
+        let pageIndex = this.sliderBscroll.getCurrentPage().pageX
+        this.sliderBscroll.goToPage(pageIndex,0,0)
+        this.currentPageIndex = pageIndex
+        if(this.autoPlay){
+            this.play()
+        }
+    },
+    deactivated(){
+        this.sliderBscroll.disable()
+        clearTimeout(this.timer)
+    },
+    beforeDestroy(){
+        this.sliderBscroll.disable()
+        clearTimeout(this.timer)
     },
     methods:{
-        setSliderWith(){
+        refresh(){
+            if(this.sliderBscroll){
+                this.setSliderWith(true)
+                this.sliderBscroll.refresh()
+            }
+        },
+        setSliderWith(isResize){
             this.children = this.$refs.sliderGroup.children
             let width = 0 ;
             let sliderWidth = this.$refs.slider.clientWidth
@@ -59,7 +101,7 @@ export default {
                 child.style.width = sliderWidth +'px'
                 width += sliderWidth
             }
-            if(this.loop){
+            if(this.loop && !isResize){
                 width += 2 * sliderWidth
                 console.log(width)
             }
@@ -73,34 +115,39 @@ export default {
                 scrollX:true,
                 scrollY:false,
                 momentum:false,
-                snap:true,
-                snapLoop: this.loop,
-                snapThreshold:0.3,
-                snapSpeed:400,
+                snap:{
+                 loop: this.loop,
+                 threshold:0.3,
+                 speed:400,
+                },
                 click:true 
                  
             })
-            this.sliderBscroll.on("scrollEnd",() => {
-                let pageIndex = this.sliderBscroll.getCurrentPage().pageX 
-                console.log(pageIndex)
-                /*if(this.loop){
-                    pageIndex -= 1
-                }*/
-                this.currentPageIndex = pageIndex
+            this.sliderBscroll.on("scrollEnd",this.onScrollEnd)
+            this.sliderBscroll.on('touchend',()=>{
+                if(this.autoPlay){
+                    this.play()
+                }
+            })
+            this.sliderBscroll.on('beforeScrollStart',() => {
                 if(this.autoPlay){
                     clearTimeout(this.timer)
-                    this.play()
                 }
             })
         
         },
+        onScrollEnd(){
+            let pageIndex = this.sliderBscroll.getCurrentPage().pageX 
+                console.log(pageIndex)
+                this.currentPageIndex = pageIndex
+                if(this.autoPlay){
+                    this.play()
+                }
+        },
         play(){
-            let nextPage = this.currentPageIndex + 1
-           /* if(this.loop){
-                nextPage += 1
-            }*/
+            clearTimeout(this.timer)
             this.timer = setTimeout(() => {
-                this.sliderBscroll.goToPage(nextPage,0,400)
+                this.sliderBscroll.next()
             },this.interval)  
         }
     }
