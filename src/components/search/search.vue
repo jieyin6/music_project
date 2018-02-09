@@ -1,5 +1,7 @@
 <template>
-<div class="search-wrapper"></div>
+<div class="search-wrapper">
+    <input type="text">
+</div>
 </template>
 
 <script>
