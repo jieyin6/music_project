@@ -1,13 +1,14 @@
 <template>
-  <div class="singer-wrapper">
-   
-  </div>
+  
 </template>
 
 <script>
+import swiper from 'swiper'
 export default {
+  
 }
 </script>
 
 <style>
+
 </style>

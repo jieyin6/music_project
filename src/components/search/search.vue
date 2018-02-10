@@ -25,6 +25,7 @@ export default {
             window.baidu={}
             window.baidu.sug=function(val){
                 JSON.stringify(val);
+                console.log(val)
                 console.log(val.s)
                 _this.lists = val.s
                 console.log(this.lists)

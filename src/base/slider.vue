@@ -49,7 +49,7 @@ export default {
         },20)
          
          window.addEventListener('resize',()=>{
-             if(!this.sliderBscroll || !this.slider.enabled){
+             if(!this.sliderBscroll || !this.sliderBscroll.enabled){
                  return
              }
              clearTimeout(this.resizeTimer)

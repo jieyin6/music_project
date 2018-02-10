@@ -14,18 +14,29 @@
         <h1 class="list-title">热门歌单推荐</h1>
         <ul>
         </ul>
+        <div class="sliderP_wrapper" v-if="recommends.length">
+          <slider-p>
+            <div v-for="item in recommends" :key="item.id">
+              <a :href="item.linkUrl">
+                <img :src="item.picUrl">
+              </a>
+          </div>
+          </slider-p>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import sliderP from '../slider_practice/sliderPra'
 import Slider from 'base/slider'
 import {getRecommend} from 'api/recommend'
 import {ERR_OK} from 'api/config'
 export default {
   components:{
-    Slider
+    Slider,
+    sliderP
   },
   data(){
     return {
