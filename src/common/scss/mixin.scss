@@ -23,3 +23,9 @@
     bottom: -10px
   }
 }
+//动画
+@mixin keyframes($animationName){
+  @keyframes animationName {
+      @content;
+  }
+}

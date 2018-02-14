@@ -15,8 +15,8 @@
         <ul>
         </ul>
         <div class="sliderP_wrapper" v-if="recommends.length">
-          <slider-p>
-            <div v-for="item in recommends" :key="item.id">
+          <slider-p :recommends="recommends">
+             <div v-for="item in recommends" :key="item.id">
               <a :href="item.linkUrl">
                 <img :src="item.picUrl">
               </a>
