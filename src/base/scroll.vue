@@ -40,15 +40,15 @@ export default {
          
      },
  //定义一些方法
- enable(){
+    enable(){
      this.scroll && this.scroll.enable()
- },
- disable(){
+    },
+    disable(){
      this.scroll && this.scroll.disable()
- },
- refresh(){
+    },
+    refresh(){
      this.scroll && this.scroll.refresh()
- }
+    }
  },
  //观察数据变化就调用refresh方法
  watch:{
