@@ -1,6 +1,8 @@
 <template>
   <div class="slider-p-wrapper" ref="sliderwra" @mouseenter='stop' @mouseleave='start'>
-      <div class="slider-p-content" ref="sliderp" >
+      <div class="slider-p-content" ref="sliderp"
+      :style="{transform:`translate(-indexPic * 100 / newrecommends.length)%` , transition:isReset? '' : `transform 1s ease`}"
+      >
         <div v-for="(item,index) in newrecommends" :key="index">
               <a :href="item.linkUrl">
                 <img :src="item.picUrl">
@@ -10,12 +12,12 @@
        <div class="dots">
           <ul>
               <li v-for= "(dot,index) in dots" :key="index"
-              :class="{ dotActive : indexPic -1  === index}"
+              :class="{ dotActive : dotIndex  === index}"
               @click="changePic(index)"></li>
           </ul>
       </div>
-      <div class="left" @click="leftclick" ref="left">&lt;</div>
-      <div class="right" @click="rightclick" ref="right">&gt;</div>
+      <div class="left" @click="leftclick" ref="left" v-show="block">&lt;</div>
+      <div class="right" @click="rightclick" ref="right" v-show="block">&gt;</div>
   </div>
 </template>
 
@@ -38,18 +40,24 @@ export default {
             //首位添加图片后的数组
             newrecommends:[],
             //第几张照片
-            indexPic:1,
-            //图片位移总时间
-            time:300,
-            //图片位移间隔
-            interval:3
+            indexPic:null,
+            //显示左右箭头
+            block:false,
+           //小圆点index
+           dotIndex:null,
+           //是否瞬间重置定位，在watch中初始化，重定位会取消transition动画
+           isReset:false
         }
     },
     mounted(){
         //设置显示第一张图片
         let width = this.$refs.sliderwra.clientWidth
         this.$refs.sliderp.style.left = -width +'px'
-        console.log(this.recommends)
+        this.indexPic = 1
+        this.dotIndex = 0
+        this.isReset = false
+        //设置动画行内样式
+        this.$refs.sliderp.style.transition = 'left 0.3s linear'
         setTimeout(() => {
             this.getWidth()
             this.getdots()
@@ -72,6 +80,23 @@ export default {
          this.newrecommends.unshift(first)
          console.log(this.newrecommends)
      },
+    watch:{
+        indexPic(newindex){
+            if(newindex == this.newrecommends.length-1){
+               this.isReset = true
+               this.indexPic = 1
+               let width = this.$refs.sliderwra.clientWidth
+               this.$refs.sliderp.style.left = -width +'px'
+            }
+            if(newindex == 0){
+                this.isReset = true
+                this,indexPic = this.newrecommends.length - 2 
+                let width = this.$refs.sliderwra.clientWidth
+                this.$refs.sliderp.style.left = -parseFloat(this.$refs.sliderp.style.width)+2 * width +'px'
+                
+           }
+        }
+    },
   methods:{
       //获取总宽度
       getWidth(){
@@ -90,15 +115,25 @@ export default {
       animate(width){
          let newleft = parseFloat(this.$refs.sliderp.style.left)+width 
          this.$refs.sliderp.style.left = newleft +'px'
-         this.go(width,newleft)
+         let left1 = this.$refs.sliderwra.clientWidth
+        let left6 = - parseFloat(this.$refs.sliderp.style.width) + left1
+        if(newleft > 0){
+            this.$refs.sliderp.style.left = left6+'px'
+        } 
+        if(newleft < left6){
+          this.$refs.sliderp.style.left = 0 +'px' 
+        }
       },
+
       //向后翻
       rightclick(){
           console.log('right')
-          if(this.indexPic == this.recommends.length){
-              this.indexPic = 1
+         if(this.indexPic == this.newrecommends.length){
+                this.indexPic = 1
+                this.dotActive(1) 
           }else{
                this.indexPic +=1
+               this.dotActive(1)
           }
          let width = this.$refs.sliderwra.clientWidth
           this.animate(-width)
@@ -106,10 +141,12 @@ export default {
       //向前翻
       leftclick(){
           console.log('left')
-          if(this.indexPic == 1){
-              this.indexPic = this.recommends.length
+          if(this.indexPic == 0){
+              this.indexPic = this.newrecommends.length
+              this.dotActive(-1)
           }else{
               this.indexPic -=1
+              this.dotActive(-1)
           }
           let width = this.$refs.sliderwra.clientWidth
           this.animate(width)
@@ -117,6 +154,14 @@ export default {
     //显示小圆点
      getdots(){
           this.dots = new Array(this.recommends.length)
+      },
+      //小圆点的点亮
+    dotActive(val){
+          if(this.dotIndex == this.recommends.length-1){
+              this.dotIndex = 0
+          }else{
+              this.dotIndex = this.dotIndex + val
+          }
       },
       //按钮切换
      changePic(index){
@@ -128,45 +173,25 @@ export default {
               let offest = offestIndex * ( - width)
               this.animate(offest)
               this.indexPic = index + 1
+              this.dotIndex = index
           }
       },
-      //位移函数
-      go(width,newleft){
-          console.log('go')
-          //每次位移量
-          let variable = width/(this.time/this.interval)
-          if((variable > 0 && parseFloat(this.$refs.sliderp.style.left)<newleft) || (variable < 0 && parseFloat(this.$refs.sliderp.style.left)>newleft )  ){
-              this.$refs.sliderp.style.left = parseFloat(this.$refs.sliderp.style.left) + variable +'px'
-              //调用的是自身，所以会重复调用
-              setTimeout(this.go(width,newleft),this.interval)         
-          }else{
-              this.$refs.sliderp.style.left = newleft +'px'
-              let left1 = this.$refs.sliderwra.clientWidth
-              let left5 = - parseFloat(this.$refs.sliderp.style.width) + 2*left1
-             if(newleft > -left1){
-               this.$refs.sliderp.style.left = left5+'px'
-             } 
-             if(newleft < left5){
-             this.$refs.sliderp.style.left = -left1 +'px' 
-             }   
-          }
-      },
+      
       //自动播放
       _autoPlay(){
-          this.$refs.left.style.display = 'none'
-          this.$refs.right.style.display = 'none'
+          clearInterval(this.timer)
           this.timer = setInterval(()=>{
               this.rightclick()
           },5000)
       },
       //滑入停止自动播放
      stop(){
-         this.$refs.left.style.display = 'block'
-         this.$refs.right.style.display = 'block'
+         this.block=true
          clearInterval(this.timer)
     },
     //滑出开启自动播放
     start(){
+        this.block=false
         this._autoPlay()
     }
   }
@@ -187,7 +212,8 @@ export default {
         top: 0;
         overflow: hidden;
         white-space: nowrap;
-        transition: left 0.3s linear;
+      /*  transition: left 0.3s linear;*/
+     
         .item-class{
             float: left;
             

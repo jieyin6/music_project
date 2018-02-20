@@ -103,7 +103,7 @@ export default {
             }
             if(this.loop && !isResize){
                 width += 2 * sliderWidth
-                console.log(width)
+                
             }
             this.$refs.sliderGroup.style.width = width + 'px'
         },
@@ -138,7 +138,6 @@ export default {
         },
         onScrollEnd(){
             let pageIndex = this.sliderBscroll.getCurrentPage().pageX 
-                console.log(pageIndex)
                 this.currentPageIndex = pageIndex
                 if(this.autoPlay){
                     this.play()

@@ -1,6 +1,5 @@
 //通用参数
 export const commonParams = {
-  g_tk: 5381,
   format: 'jsonp',
   inCharset: 'utf-8',
   outCharset: 'utf-8',

@@ -24,8 +24,3 @@
   }
 }
 //动画
-@mixin keyframes($animationName){
-  @keyframes animationName {
-      @content;
-  }
-}
