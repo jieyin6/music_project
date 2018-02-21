@@ -37,7 +37,7 @@
       <loading></loading>
     </div>
     </scroll>
-    </scroll>
+   
   </div>
 </template>
 

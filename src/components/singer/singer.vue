@@ -1,17 +1,25 @@
 <template>
   <div class="singer-wrapper">
-   
+   <list-view :data="singerList"></list-view>
   </div>
 </template>
 
 <script>
 import {getSingerList} from 'api/singer'
 import {ERR_OK} from 'api/config'
+import Singer from 'common/js/singer'
+import ListView from 'base/listview/listview'
+
+const hotSingerLength = 10
+const hot_name = '热门'
 export default {
   data(){
     return{
       singerList:[]
     }
+  },
+  components:{
+    ListView
   },
   created(){
     
@@ -23,9 +31,60 @@ export default {
       getSingerList().then((res) => {
         if(res.code === ERR_OK){
           console.log(res.data.list)
+          this.singerList=this._nomalizeSinger(res.data.list)
+          console.log(this.singerList)
         }
       })
+    },
+    _nomalizeSinger(list){
+       let map ={
+         hot:{
+           title:hot_name,
+           items:[]
+         }
+       }
+       list.forEach((items,index) => {
+         if(index < hotSingerLength){
+           map.hot.items.push(new Singer({
+             id:items.Fsinger_mid,
+             name:items.Fsinger_name
+          }))
+         }
+        const key = items.Findex
+        if(!map[key]){
+            map[key]={
+              title:key,
+              items:[]
+            }
+          }
+        map[key].items.push(new Singer({
+          id:items.Fsinger_mid,
+          name:items.Fsinger_name
+        }))
+      
+      })
+      //将map对象整理成数组 按照我们所需要的顺序
+      let hot = []
+      let ret = []
+      for(let key in map){
+        let val = map[key]
+        if(val.title.match(/[a-zA-Z]/)){
+          ret.push(val)
+        }else if(val.title === hot_name){
+          hot.push(val)
+        }
+      }
+        //按照a-z排序
+      ret.sort((a,b)=>{
+        //charCodeAt() 方法可返回指定位置的字符的 Unicode 编码。这个返回值是 0 - 65535 之间的整数。
+        return a.title.charCodeAt(0) - b.title.charCodeAt(0)
+      })
+      console.log(hot)
+      console.log(ret)
+      return hot.concat(ret)
+
     }
+
   }
 }
 </script>

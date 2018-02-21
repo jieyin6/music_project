@@ -21,6 +21,10 @@ export default {
     data:{
         type:Array,
         default:null
+    },
+    listenScroll:{
+        type:Boolean,
+        default:false
     }
   },
   mounted(){
@@ -33,11 +37,17 @@ export default {
          if(!this.$refs.wrapper){
                  return
              }
-             this.srcoll = new Bscroll(this.$refs.wrapper,{
+             this.scroll = new Bscroll(this.$refs.wrapper,{
                  probeType:this.probeType,
                  click:this.click,
              })
-         
+             //监听滚动事件
+         if(this.listenScroll){
+             let _this = this
+             this.scroll.on('scroll',(pos)=>{
+                 _this.$emit('scroll',pos)
+             })
+         }
      },
  //定义一些方法
     enable(){
@@ -48,6 +58,12 @@ export default {
     },
     refresh(){
      this.scroll && this.scroll.refresh()
+    },
+    scrollTo(){
+        this.scroll && this.scroll.scrollTo.apply(this.scroll,arguments)
+    },
+    scrollToElement(){
+        this.scroll && this.scroll.scrollToElement.apply(this.scroll,arguments)
     }
  },
  //观察数据变化就调用refresh方法
