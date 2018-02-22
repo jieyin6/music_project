@@ -4,6 +4,7 @@ import 'babel-polyfill' // 辅助es6编译时的操作
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store'
 import fastclick from 'fastclick'
 import 'common/scss/index.scss'
 import VueLazyload from 'vue-lazyload'
@@ -18,6 +19,8 @@ Vue.use(VueLazyload,{
 new Vue({
   el: '#app',
   router,
+  store,
   components: { App },
   template: '<App/>'
+
 })

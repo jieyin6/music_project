@@ -11,7 +11,11 @@
         <li v-for="group in data" :key= "group.id" class="singer-group" ref="listGroup">
             <h2>{{group.title}}</h2>
             <ul>
-                <li v-for="item in group.items" :key= "item.id" class="singer-item"> 
+                <li v-for="item in group.items"
+                    :key= "item.id" 
+                    class="singer-item"
+                    @click="selectItem(item)"
+                    > 
                     <img v-lazy="item.avatar">
                     <p class="singer-name">{{item.name}}</p>
                 </li>
@@ -85,6 +89,10 @@ export default {
       this.height_group = []
   },
  methods:{
+     //点击派发事件
+     selectItem(item){
+        this.$emit('select',item)
+     },
      onTouchstart(e){
          let touchIndex = getData(e.target,'index')
          //一个 TouchList，其会列出所有当前在与触摸表面接触的  Touch 对象，
@@ -147,7 +155,7 @@ export default {
              if(!height2 || (-newY) >= height1 && (-newY) < height2) {
                 this.currentInedx = i
                 this.diff = height2 + newY
-                 return
+                return
              }
              if( (-newY) < height1){
                  this.currentInedx = 0
@@ -158,11 +166,11 @@ export default {
      },
      diff(newVal){
          let fixedTop = (newVal > 0 && newVal < title_height) ? newVal - title_height : 0
-         if(this.fixedTop == fixedTop){
+         if(this.fixedTop === fixedTop){
              return
          }
          this.fixedTop = fixedTop
-         this.$refs.fixed.style.transform = `translate3d(0,${fixedTop},0)`
+         this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
      }
  }
 }
