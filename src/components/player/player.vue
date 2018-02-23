@@ -20,7 +20,7 @@
           <div class="middle">
               <div class="middle-l">
                   <div class="cd-wrapper" ref="cdWrapper">
-                      <div class="cd">
+                      <div class="cd" :class="cdClass">
                           <img class="image" :src="currentSong.image">
                       </div>
                   </div>
@@ -35,7 +35,7 @@
                       <i class="icon-prev"></i>
                   </div>
                   <div class="icon i-center">
-                      <i class="icon-play"></i>
+                      <i :class="playIcon" @click="togglePlaying"></i>
                   </div>
                   <div class="icon i-right">
                       <i class="icon-next"></i>
@@ -49,31 +49,47 @@
     </transition>
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
-          <div class="icon">
+          <div class="icon" :class="cdClass">
               <img width="40" height="40" :src="currentSong.image">
           </div>
           <div class="text">
               <h2 class="name" v-html="currentSong.name"></h2>
               <p class="desc" v-html="currentSong.singer"></p>
           </div>
-          <div class="control"></div>
+          <div class="control">
+              <i :class="miniPlayIcon" @click.stop="togglePlaying"></i>
+          </div>
           <div class="control">
               <i class="icon-playlist"></i>
           </div>
       </div>
      </transition>
+     <audio :src="currentSong.url" ref="audio"></audio>
   </div>
 </template>
 
 <script>
 import {mapGetters,mapMutations} from 'vuex'
 import animations from 'create-keyframe-animation'
+import {prefixStyle} from 'common/js/dom'
+
+const transform = prefixStyle('transform')
 export default {
     computed:{
+        cdClass(){
+            return this.playing ? 'play' : "play pause"
+        },
+        playIcon(){
+            return this.playing ? 'icon-pause' : "icon-play"
+        },
+        miniPlayIcon(){
+             return this.playing ? 'icon-pause-mini' : "icon-play-mini"
+        },
         ...mapGetters([
             'fullScreen',
             'playList',
-            'currentSong'
+            'currentSong',
+            'playing'
         ])
     },
     methods:{
@@ -114,10 +130,14 @@ export default {
             this.$refs.cdWrapper.style.animation = ''
         },
         leave(el,done){
-
+            this.$refs.cdWrapper.style.transition = 'all 0.4s'
+            const{x,y,scale} = this._getPosAndScale()
+            this.$refs.cdWrapper.style[transform] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+            this.$refs.cdWrapper.addEventListener('transitionend',done)   
         },
         afterLeave(){
-
+            this.$refs.cdWrapper.style.transition = ''
+            this.$refs.cdWrapper.style[transform] = ''
         },
         _getPosAndScale(){
             const targetWidth = 40 
@@ -134,9 +154,26 @@ export default {
                 scale
             }
         },
+        togglePlaying(){
+            this.setPlaying(!this.playing)
+        },
         ...mapMutations({
-            setFullScreen:'SET_FULL_SCREEN'
+            setFullScreen:'SET_FULL_SCREEN',
+            setPlaying:'SET_PlAYING'
         })
+    },
+    watch:{
+        currentSong(){
+            this.$nextTick(()=>{
+                 this.$refs.audio.play()
+            })
+        },
+        playing(newplaying){
+            let audio = this.$refs.audio
+            this.$nextTick (()=>{
+                 newplaying ? audio.play() : audio.pause()
+            })
+        }
     }
 }
 </script>
@@ -221,7 +258,7 @@ export default {
                         box-sizing: border-box;
                         border: 10px solid rgba(255, 255, 255, 0.1);
                         border-radius: 50%;
-                         .image{
+                       .image{
                             position: absolute;
                             left: 0;
                             top: 0;
@@ -230,6 +267,13 @@ export default {
                             border-radius: 50%;
                          }
                     }
+                    .play{
+                        animation: rotate 20s linear infinite
+                    }   
+                    .pause{
+                        animation-play-state: paused
+                    }
+                    
                 }
             }
         }
@@ -297,6 +341,12 @@ export default {
                 border-radius: 50%;
             }
         }
+        .play{
+            animation: rotate 20s linear infinite
+        }
+        .pause{
+            animation-play-state: paused
+        }
         .text{
             display: flex;
             flex-direction: column;
@@ -323,6 +373,9 @@ export default {
         }
      }
 }
+/* 播放按钮的公共样式 */
+
+
  .normal-enter-active, .normal-leave-active{
     transition: all 0.4s;
     .top, .bottom{
@@ -344,4 +397,13 @@ export default {
  .mini-enter, .mini-leave-to{
     opacity: 0
 }
+
+ @keyframes rotate{
+    0%{
+      transform: rotate(0)
+    }
+    100%{
+      transform: rotate(360deg)
+    }
+ }
 </style>
