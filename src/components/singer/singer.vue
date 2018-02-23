@@ -57,7 +57,8 @@ export default {
          if(index < hotSingerLength){
            map.hot.items.push(new Singer({
              id:items.Fsinger_mid,
-             name:items.Fsinger_name
+             name:items.Fsinger_name,
+             idNum:items.Fsinger_id
           }))
          }
         const key = items.Findex
@@ -69,7 +70,8 @@ export default {
           }
         map[key].items.push(new Singer({
           id:items.Fsinger_mid,
-          name:items.Fsinger_name
+          name:items.Fsinger_name,
+          idNum:items.Fsinger_id
         }))
       
       })
