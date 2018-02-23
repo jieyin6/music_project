@@ -1,9 +1,13 @@
 <template>
-  <div class="charts-wrapper"></div>
+  <rank></rank>
 </template>
 
 <script>
+import rank from '../rank/rank'
 export default {
+  components:{
+    rank
+  }
 }
 </script>
 
