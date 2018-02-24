@@ -3,10 +3,12 @@ import Router from 'vue-router'
 // import HelloWorld from '@/components/HelloWorld'
 import recommend from '../components/recommend/recommend'
 import singer from '../components/singer/singer'
-import charts from '../components/charts/charts'
 import search from '../components/search/search'
 import singerDetail from '../components/singer-detail/singer-detail'
 import disc from '../components/disc/disc'
+import topList from '../components/top-list/top-list'
+import rank from '../components/rank/rank'
+
 Vue.use(Router)
 
 export default new Router({
@@ -39,9 +41,15 @@ export default new Router({
       ]
     },
     {
-      path: '/charts',
-      name: 'charts',
-      component: charts
+      path: '/rank',
+      name: 'rank',
+      component: rank,
+      children:[
+        {
+          path:':id',
+          component:topList
+        }
+      ]
     },
     {
       path: '/search',

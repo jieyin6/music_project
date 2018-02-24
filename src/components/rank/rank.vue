@@ -1,27 +1,66 @@
 <template>
- <div class="rank">
-     <div class="toplist">
+ <div class="rank" >
+     <scroll class="toplist" :data="toplist">
          <ul>
-             <li class="item">
+             <li class="item" v-for="item in toplist" :key="item.id" @click="selectList(item,item.id)">
                  <div class="icon">
-                     <img width="100" height="100">
+                     <img width="100" height="100" v-lazy="item.picUrl">
                  </div>
                  <ul class="songlist">
-                     <li class="song">
-                         <span></span>
-                         <span></span>
+                     <li class="song" v-for="(song,index) in item.songList" :key="song.id">
+                         <span>{{index + 1}}</span>
+                         <span >{{song.songname}} - {{song.singername}}</span>
                      </li>
                  </ul>
              </li>
          </ul>
-     </div>
-    
+         <div class="loading-container" v-show="!toplist.length">
+             <loading></loading>
+         </div>
+     </scroll>
+    <router-view></router-view>
  </div>
 </template>
 
 <script>
-export default {
+import {getTopList} from 'api/rank'
+import {ERR_OK} from 'api/config'
+import scroll from 'base/scroll'
+import loading from 'base/loading/loading'
+import {mapMutations} from 'vuex'
 
+export default {
+    components:{
+        scroll,
+        loading
+    },
+    data(){
+        return{
+            toplist:[]
+        }
+    },
+    created(){
+        this._getTopList()
+    },
+    methods:{
+        _getTopList(){
+            getTopList().then((res)=>{
+                if(res.code === ERR_OK){
+                    this.toplist = res.data.topList
+                    console.log(this.toplist)
+                }
+            })
+        },
+        selectList(item,index){
+            //this.$emit('select',item,index)
+            this.$router.push(`/rank/${index}`)
+            this.setToplist(item)
+        },
+         ...mapMutations({
+        setToplist:'SET_TOP_LIST'
+    })
+    },
+   
 }
 </script>
 
@@ -63,9 +102,18 @@ export default {
                 font-size: $font-size-small;
                 .song{
                     /* no-wrap()*/
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
                     line-height: 26px;
                 }
             }
+        }
+        .loading-container{
+           position: absolute;
+           width: 100%;
+           top: 50%;
+           transform: translateY(-50%)
         }
     }
 }
