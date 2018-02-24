@@ -1,23 +1,37 @@
 <template>
-  <div class="suggest">
+  <scroll class="suggest" 
+          :data='result'
+          :pullUp='pullUp'
+          @scrollToEnd='searchMore'
+          >
       <ul class="suggest-list">
-          <li class="suggest-item">
+          <li class="suggest-item" v-for="item in result" :key="item.id">
               <div class="icon">
-                  <i></i>
+                  <i :class="getIconCla(item)"></i>
               </div>
               <div class="name">
-                  <p class="text"></p>
+                  <p class="text" v-html="getDisplayName(item)"></p>
               </div>
           </li>
+          <loading v-show="hasMore" title=""></loading>
       </ul>
-  </div>
-</template>
+  </scroll>
+</template> 
 
 <script>
+import loading from 'base/loading/loading'
+import scroll from 'base/scroll'
 import {search} from 'api/search'
 import {ERR_OK} from 'api/config'
+import {createSong} from 'common/js/song'
+const prepage = 20
 
+const TYPE_SINGER = 'singer'
 export default {
+    components:{
+        scroll,
+        loading
+    },
     props:{
         query:{
             type:String,
@@ -31,17 +45,77 @@ export default {
     data(){
         return{
             page:1,
-            result:[]
+            result:[],
+            pullUp:true,
+            //是否还有更多
+            hasMore:true
         }
     },
     methods:{
         _search(){
-            search(this.query,this.page,this.showSinger).then((res) => ){
-                if(res.code === ERR_OK){
-                    
-                }
+            this.hasMore = true
+            search(this.query,this.page,this.showSinger,prepage).then((res) =>{
+                 if(res.code === ERR_OK){
+                     this.result = this._getResult(res.data)
+                     this._checkMore(res.data)
+               }
+            })
+        },
+       searchMore(){
+           
+            if(!this.hasMore){
+                return
             }
-        }
+            console.log('success')
+            this.page++
+            search(this.query,this.page,this.showSinger,prepage).then((res)=>{
+                if(res.code === ERR_OK){
+                     this.result = this.result.concat(this._getResult(res.data))
+                     this._checkMore(res.data)
+               }
+            })
+        },
+        _checkMore(data){
+            const song = data.song
+            console.log(song)
+            if(!song.list.length || song.curnum + song.curpage * prepage >= song.totalnum){
+                this.hasMore = false
+            }
+        },
+        _getResult(data){
+            let ret = []
+            if(data.zhida && data.zhida.singerid){
+                ret.push({...data.zhida,...{type:TYPE_SINGER}})
+            }
+            if(data.song){
+               ret = ret.concat(this._normalizeSong(data.song.list))
+             }
+            return ret
+        },
+        getIconCla(item){
+            if(item.type === TYPE_SINGER){
+                return 'icon-mine'
+            }else{
+                return 'icon-music'
+            }
+        },
+        getDisplayName(item){
+            if(item.type === TYPE_SINGER){
+                return item.singername
+            }else{
+                return `${item.name}-${item.singer}`
+            }
+        },
+        _normalizeSong(list){
+            let ret = []
+            list.forEach((musicData) => {
+                 if (musicData.songid && musicData.albummid) {
+                        ret.push(createSong(musicData))
+                    }
+            })
+            return ret
+        },
+        
     },
     watch:{
         query(){

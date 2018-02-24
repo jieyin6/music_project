@@ -25,6 +25,11 @@ export default {
     listenScroll:{
         type:Boolean,
         default:false
+    },
+    //上拉更新
+    pullUp:{
+        type:Boolean,
+        default:false
     }
   },
   mounted(){
@@ -48,6 +53,16 @@ export default {
                  _this.$emit('scroll',pos)
              })
          }
+        if(this.pullUp){
+            this.scroll.on('scrollEnd',()=>{
+               
+                if(this.scroll.y <= (this.scroll.maxScrollY +50)){
+                     
+                    this.$emit('scrollToEnd')
+                }
+            })
+        }
+
      },
  //定义一些方法
     enable(){
