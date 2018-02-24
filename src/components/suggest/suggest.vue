@@ -3,9 +3,10 @@
           :data='result'
           :pullUp='pullUp'
           @scrollToEnd='searchMore'
+          ref="scroll"
           >
       <ul class="suggest-list">
-          <li class="suggest-item" v-for="item in result" :key="item.id">
+          <li @click="selectItem(item)" class="suggest-item" v-for="item in result" :key="item.id">
               <div class="icon">
                   <i :class="getIconCla(item)"></i>
               </div>
@@ -24,6 +25,8 @@ import scroll from 'base/scroll'
 import {search} from 'api/search'
 import {ERR_OK} from 'api/config'
 import {createSong} from 'common/js/song'
+import Singer from 'common/js/singer'
+import {mapMutations} from 'vuex'
 const prepage = 20
 
 const TYPE_SINGER = 'singer'
@@ -53,6 +56,9 @@ export default {
     },
     methods:{
         _search(){
+            //query值改变时，加载到第一页的位置
+            this.page = 1
+            this.$refs.scroll.scrollTo(0,0)
             this.hasMore = true
             search(this.query,this.page,this.showSinger,prepage).then((res) =>{
                  if(res.code === ERR_OK){
@@ -66,7 +72,7 @@ export default {
             if(!this.hasMore){
                 return
             }
-            console.log('success')
+            
             this.page++
             search(this.query,this.page,this.showSinger,prepage).then((res)=>{
                 if(res.code === ERR_OK){
@@ -77,7 +83,7 @@ export default {
         },
         _checkMore(data){
             const song = data.song
-            console.log(song)
+           
             if(!song.list.length || song.curnum + song.curpage * prepage >= song.totalnum){
                 this.hasMore = false
             }
@@ -115,7 +121,25 @@ export default {
             })
             return ret
         },
-        
+        selectItem(item){
+            if(item.type === TYPE_SINGER){
+                const singer = new Singer({
+                    id:item.singermid,
+                    name:item.singername,
+                    idNum:item.singerid
+                })
+                console.log(singer)
+                this.$router.push({
+                    path:`/search/${singer.id}`
+                })
+                this.setSinger(singer)
+            }
+          
+        },
+        ...mapMutations({
+            setSinger:'SET_SINGER'
+        })
+
     },
     watch:{
         query(){

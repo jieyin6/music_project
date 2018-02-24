@@ -31,13 +31,13 @@
                   <div class="icon i-left">
                       <i class="icon-sequence"></i>
                   </div>
-                  <div class="icon i-left">
+                  <div class="icon i-left" @click="prev" :class="disableCls"> 
                       <i class="icon-prev"></i>
                   </div>
-                  <div class="icon i-center">
+                  <div class="icon i-center" :class="disableCls">
                       <i :class="playIcon" @click="togglePlaying"></i>
                   </div>
-                  <div class="icon i-right">
+                  <div class="icon i-right" @click="next" :class="disableCls">
                       <i class="icon-next"></i>
                   </div>
                   <div class="icon i-right">
@@ -64,7 +64,7 @@
           </div>
       </div>
      </transition>
-     <audio :src="currentSong.url" ref="audio"></audio>
+     <audio :src="currentSong.url" ref="audio" @canplay="canplay" @error="error"></audio>
   </div>
 </template>
 
@@ -85,12 +85,21 @@ export default {
         miniPlayIcon(){
              return this.playing ? 'icon-pause-mini' : "icon-play-mini"
         },
+        disableCls(){
+            return this.songReady ? '' :'disable'
+        },
         ...mapGetters([
             'fullScreen',
             'playList',
             'currentSong',
-            'playing'
+            'playing',
+            'currentIndex'
         ])
+    },
+    data(){
+        return{
+            songReady:false
+        }
     },
     methods:{
         back(){
@@ -139,6 +148,41 @@ export default {
             this.$refs.cdWrapper.style.transition = ''
             this.$refs.cdWrapper.style[transform] = ''
         },
+        canplay(){
+            this.songReady = true
+        },
+        error(){
+            this.songReady = true
+        },
+        prev(){
+            if(!this.songReady){
+                return
+            }
+            let index = this.currentIndex - 1
+            if(index === -1){
+                index = this.playList.length - 1
+            }
+            this.setCurrentIndex(index)
+            //暂停时切换歌曲要改变按钮状态
+            if(!this.playing){
+                this.togglePlaying()
+            }
+            this.songReady=false
+        },
+        next(){
+             if(!this.songReady){
+                return
+            }
+            let index = this.currentIndex + 1
+            if(index === this.playList.length){
+                index = 0
+            }
+            this.setCurrentIndex(index)
+             if(!this.playing){
+                this.togglePlaying()
+            }
+            this.songReady = false
+        },
         _getPosAndScale(){
             const targetWidth = 40 
             const paddingBottom = 30
@@ -155,11 +199,16 @@ export default {
             }
         },
         togglePlaying(){
+             if(!this.songReady){
+                return
+            }
             this.setPlaying(!this.playing)
+            this.songReady = false
         },
         ...mapMutations({
             setFullScreen:'SET_FULL_SCREEN',
-            setPlaying:'SET_PlAYING'
+            setPlaying:'SET_PlAYING',
+            setCurrentIndex:'SET_CURRENT_INDEX'
         })
     },
     watch:{
@@ -221,7 +270,7 @@ export default {
                 margin: 0 auto;
                 line-height: 40px;
                 text-align: center;
-                /*no-wrap()*/
+                @include no-wrap();
                 font-size: $font-size-large;
                 color: $color-text;
             }
@@ -300,6 +349,9 @@ export default {
                 .icon{
                     flex: 1;
                     color: $color-theme;
+                    &.disable{
+                        color: $color-theme-d
+                    }
                     i{
                         font-size: 30px
                     }
@@ -337,6 +389,7 @@ export default {
             flex: 0 0 40px;
             width: 40px;
             padding: 0 10px 0 20px;
+            
             img{
                 border-radius: 50%;
             }
@@ -356,12 +409,12 @@ export default {
             overflow: hidden;
             .name{
                  margin-bottom: 2px;
-                /* no-wrap() */
+                 @include no-wrap(); 
                 font-size: $font-size-medium;
                 color: $color-text;
             }
             .desc{
-               /* no-wrap()*/
+                @include no-wrap();
                 font-size: $font-size-small;
                 color: $color-text-d;
             }
