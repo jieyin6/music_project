@@ -17,24 +17,28 @@
               <h1 class="title" v-html="currentSong.name"></h1>
               <h2 class="subtitle" v-html="currentSong.singer"></h2>
           </div>
-          <div class="middle">
-            <!--  <div class="middle-l">
+        <div class="middle">
+          <!--   <div class="middle-l">
                   <div class="cd-wrapper" ref="cdWrapper">
                       <div class="cd" :class="cdClass">
                           <img class="image" :src="currentSong.image">
                       </div>
                   </div>
               </div> -->
-              <div class="middle-r" ref="lyric.list" v-show="currentLyric">
+               <scroll class="middle-r" ref="lyric.list">
+                   
                   <div class="lyric-wrapper">
-                      <div class="currentLyric">
+                      <div class="currentLyric" v-if="currentLyric">
                           <p class="text" 
                              v-for="(line,index) in currentLyric.lines" :key="index"
                              ref="lyricline"
-                             :class="{'current':currentLineNum === index}">{{line.txt}}</p>
+                             :class="{'current':currentLineNum === index}"
+                             >{{line.txt}}</p>
                       </div>
                   </div>
-              </div>
+                  
+                </scroll>
+              
           </div>
           <div class="bottom">
              <div class="progress-wrapper">
@@ -102,12 +106,14 @@ import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/until'
 import Lyric from 'lyric-parser'
 import Song from 'common/js/song'
+import scroll from 'base/scroll'
 
 const transform = prefixStyle('transform')
 export default {
     components:{
         progressBar,
-        progressCircle
+        progressCircle,
+        scroll
     },
     computed:{
         cdClass(){
@@ -146,7 +152,8 @@ export default {
             songReady:false,
             currentTime:0,
             currentLyric:null,
-            currentLineNum:0
+            currentLineNum:0,
+           
         }
     },
     methods:{
@@ -317,7 +324,8 @@ export default {
         getLyric(){
             this.currentSong.getLyric().then((lyric)=>{
                 this.currentLyric = new Lyric(lyric,this.lyricHandler)
-                console.log(this.currentLyric.lines)
+               
+                console.log(this.currentLyric)
                 if(this.playing){
                     this.currentLyric.play()
                 }
@@ -469,7 +477,7 @@ export default {
                                 color: $color-text-l;
                                 font-size: $font-size-medium;
                             }
-                            &.current{
+                            .current{
                                 color: $color-text;
                             }
                     }
