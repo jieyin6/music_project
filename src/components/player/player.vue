@@ -27,9 +27,16 @@
               </div>
           </div>
           <div class="bottom">
+             <div class="progress-wrapper">
+                 <span class="time time-l">{{format(currentTime)}}</span>
+                 <div class="progress-bar-wrapper">
+                     <progress-bar :precent='precent' @changeprecent='changePrecent'></progress-bar>
+                 </div>
+                 <span class="time time-r">{{format(currentSong.duration)}}</span>
+             </div>
               <div class="operators">
-                  <div class="icon i-left">
-                      <i class="icon-sequence"></i>
+                  <div class="icon i-left" @click="changeMode">
+                      <i :class="playmode"></i>
                   </div>
                   <div class="icon i-left" @click="prev" :class="disableCls"> 
                       <i class="icon-prev"></i>
@@ -57,14 +64,21 @@
               <p class="desc" v-html="currentSong.singer"></p>
           </div>
           <div class="control">
-              <i :class="miniPlayIcon" @click.stop="togglePlaying"></i>
+              <progress-circle :radius='32' :precent='precent'>
+              <i :class="miniPlayIcon" class="icon-mini" @click.stop="togglePlaying"></i>
+              </progress-circle>
           </div>
           <div class="control">
               <i class="icon-playlist"></i>
           </div>
       </div>
      </transition>
-     <audio :src="currentSong.url" ref="audio" @canplay="canplay" @error="error"></audio>
+     <audio :src="currentSong.url"
+            ref="audio"
+            @canplay="canplay"
+            @error="error"
+            @timeupdate="timeupdate"
+            @ended="end"></audio>
   </div>
 </template>
 
@@ -72,9 +86,17 @@
 import {mapGetters,mapMutations} from 'vuex'
 import animations from 'create-keyframe-animation'
 import {prefixStyle} from 'common/js/dom'
+import progressBar from 'base/progress-bar/progress-bar'
+import progressCircle from 'base/progress-circle/progress-circle'
+import {playMode} from 'common/js/config'
+import {shuffle} from 'common/js/until'
 
 const transform = prefixStyle('transform')
 export default {
+    components:{
+        progressBar,
+        progressCircle
+    },
     computed:{
         cdClass(){
             return this.playing ? 'play' : "play pause"
@@ -88,20 +110,90 @@ export default {
         disableCls(){
             return this.songReady ? '' :'disable'
         },
+        //歌曲进度条
+        precent(){
+            return this.currentTime/this.currentSong.duration
+        },
+        playmode(){
+            return this.mode === playMode.sequence ? 'icon-sequence' :
+             this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+             
+        },
         ...mapGetters([
             'fullScreen',
             'playList',
             'currentSong',
             'playing',
-            'currentIndex'
+            'currentIndex',
+            'mode',
+            'sequenceList'
         ])
     },
     data(){
         return{
-            songReady:false
+            songReady:false,
+            currentTime:0
         }
     },
     methods:{
+        //获取音乐播放时间
+        timeupdate(e){
+            this.currentTime = e.target.currentTime
+        },
+        //格式时间
+        format(interval){
+            interval = interval || 0
+            const minute = this._pad(Math.floor(interval/60) || 0 )
+            const second = this._pad(Math.floor(interval%60))
+            return `${minute}:${second}`
+        },
+        //时间补零
+        _pad(num,n=2){
+            let len = num.toString().length
+            if(len < 2){
+                num = '0'+num
+                len++
+            }
+            return num
+        },
+        //改变歌曲播放的时间
+        changePrecent(precent){
+            this.$refs.audio.currentTime = this.currentSong.duration * precent
+            if(!this.playing){
+                this.togglePlaying()
+            }
+        },
+        //改变播放模式
+        changeMode(){
+            const mode = (this.mode +1)%3
+            this.setMode(mode)
+            let list = null
+            if(this.mode === playMode.random){
+                list = shuffle(this.sequenceList)
+            }else{
+                list = this.sequenceList
+            }
+             this.resetCurrentIndex(list)
+             this.setPlaylist(list)
+        },
+         resetCurrentIndex(list){
+             let index = list.findIndex((item) => {
+                 return item.id === this.currentSong.id
+             })
+             this.setCurrentIndex(index)
+        },
+        //播放完毕调到下一首
+        end(){
+            if(this.mode === playMode.loop){
+                this.loop()
+            }else{
+                this.next()
+            }
+        },
+        loop(){
+            this.$refs.audio.currentTime = 0
+            this.$refs.audio.play()
+        },
         back(){
             this.setFullScreen(false)
         },
@@ -181,8 +273,10 @@ export default {
              if(!this.playing){
                 this.togglePlaying()
             }
+           
             this.songReady = false
         },
+       
         _getPosAndScale(){
             const targetWidth = 40 
             const paddingBottom = 30
@@ -203,16 +297,22 @@ export default {
                 return
             }
             this.setPlaying(!this.playing)
-            this.songReady = false
+            
         },
         ...mapMutations({
             setFullScreen:'SET_FULL_SCREEN',
             setPlaying:'SET_PlAYING',
-            setCurrentIndex:'SET_CURRENT_INDEX'
+            setCurrentIndex:'SET_CURRENT_INDEX',
+            setMode:'SET_PLAY_MODE',
+            setPlaylist:'SET_PLATLIST'
         })
     },
     watch:{
-        currentSong(){
+        currentSong(newSong,oldSong){
+            //歌曲暂停时切换模式会使歌曲重新播放，所以需要加个判断
+            if(newSong.id === oldSong.id){
+                return
+            }
             this.$nextTick(()=>{
                  this.$refs.audio.play()
             })
@@ -343,6 +443,29 @@ export default {
                     background: $color-text-l;
                 }
             }
+            .progress-wrapper{
+                display: flex;
+                align-items: center;
+                width: 80%;
+                margin: 0px auto;
+                padding: 10px 0;
+                .time{
+                    color: $color-text;
+                    font-size: $font-size-small;
+                    flex: 0 0 30px;
+                    line-height: 30px;
+                    width: 30px;
+                    }
+                    &.time-l{
+                        text-align: left
+                    }
+                    &.time-r{
+                        text-align: right
+                    }
+                .progress-bar-wrapper{
+                    flex: 1
+                }
+            }
             .operators{
                 display: flex;
                 align-items: center;
@@ -423,6 +546,12 @@ export default {
             flex: 0 0 30px;
             width: 30px;
             padding: 0 10px;
+            .icon-mini{
+                font-size: 32px;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
         }
      }
 }
