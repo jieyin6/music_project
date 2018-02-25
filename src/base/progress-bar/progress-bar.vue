@@ -61,7 +61,7 @@ export default {
         },
         //点击改变歌曲进度
         clickProgress(e){
-            let rect = this.$refs.progressBar.getBoundingClientRec()
+            let rect = this.$refs.progressBar.getBoundingClientRect()
             let offsetWidth = e.pageX - rect.left
             this._offset(offsetWidth)
            //点击progressBtn时候 offset获取不会

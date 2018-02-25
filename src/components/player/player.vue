@@ -18,10 +18,20 @@
               <h2 class="subtitle" v-html="currentSong.singer"></h2>
           </div>
           <div class="middle">
-              <div class="middle-l">
+            <!--  <div class="middle-l">
                   <div class="cd-wrapper" ref="cdWrapper">
                       <div class="cd" :class="cdClass">
                           <img class="image" :src="currentSong.image">
+                      </div>
+                  </div>
+              </div> -->
+              <div class="middle-r" ref="lyric.list" v-show="currentLyric">
+                  <div class="lyric-wrapper">
+                      <div class="currentLyric">
+                          <p class="text" 
+                             v-for="(line,index) in currentLyric.lines" :key="index"
+                             ref="lyricline"
+                             :class="{'current':currentLineNum === index}">{{line.txt}}</p>
                       </div>
                   </div>
               </div>
@@ -90,6 +100,8 @@ import progressBar from 'base/progress-bar/progress-bar'
 import progressCircle from 'base/progress-circle/progress-circle'
 import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/until'
+import Lyric from 'lyric-parser'
+import Song from 'common/js/song'
 
 const transform = prefixStyle('transform')
 export default {
@@ -132,7 +144,9 @@ export default {
     data(){
         return{
             songReady:false,
-            currentTime:0
+            currentTime:0,
+            currentLyric:null,
+            currentLineNum:0
         }
     },
     methods:{
@@ -299,6 +313,19 @@ export default {
             this.setPlaying(!this.playing)
             
         },
+        //获取歌词
+        getLyric(){
+            this.currentSong.getLyric().then((lyric)=>{
+                this.currentLyric = new Lyric(lyric,this.lyricHandler)
+                console.log(this.currentLyric.lines)
+                if(this.playing){
+                    this.currentLyric.play()
+                }
+               })
+        },
+        lyricHandler({lineNum,txt}){
+            this.currentLineNum = lineNum
+        },
         ...mapMutations({
             setFullScreen:'SET_FULL_SCREEN',
             setPlaying:'SET_PlAYING',
@@ -315,6 +342,7 @@ export default {
             }
             this.$nextTick(()=>{
                  this.$refs.audio.play()
+                 this.getLyric()
             })
         },
         playing(newplaying){
@@ -425,6 +453,27 @@ export default {
                     
                 }
             }
+            .middle-r{
+                display: inline-block;
+                vertical-align: top;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                    .lyric-wrapper{
+                        width: 80%;
+                        margin: 0 auto;
+                        overflow: hidden;
+                        text-align: center;
+                            .text{
+                                line-height: 32px;
+                                color: $color-text-l;
+                                font-size: $font-size-medium;
+                            }
+                            &.current{
+                                color: $color-text;
+                            }
+                    }
+             }
         }
         .bottom{
             position: absolute;
@@ -551,6 +600,7 @@ export default {
                 position: absolute;
                 top: 0;
                 left: 0;
+                color: rgba(255, 205, 49, .4)
             }
         }
      }
