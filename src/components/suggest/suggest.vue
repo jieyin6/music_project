@@ -26,7 +26,8 @@ import {search} from 'api/search'
 import {ERR_OK} from 'api/config'
 import {createSong} from 'common/js/song'
 import Singer from 'common/js/singer'
-import {mapMutations} from 'vuex'
+import {mapMutations,mapActions} from 'vuex'
+
 const prepage = 20
 
 const TYPE_SINGER = 'singer'
@@ -133,13 +134,17 @@ export default {
                     path:`/search/${singer.id}`
                 })
                 this.setSinger(singer)
+            }else{
+               this.insertSong(item)
             }
           
         },
         ...mapMutations({
             setSinger:'SET_SINGER'
-        })
-
+        }),
+        ...mapActions([
+            'insertSong'
+        ])
     },
     watch:{
         query(){

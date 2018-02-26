@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend-wrapper">
+  <div class="recommend-wrapper" ref="recommend">
    
       
     <scroll class="recommend-content" ref="scroll" :data="songsList">
@@ -49,8 +49,10 @@ import Loading from 'base/loading/loading'
 import {getRecommend,getDiscList} from 'api/recommend'
 import {ERR_OK} from 'api/config'
 import {mapMutations} from 'vuex'
+import {playlistMixin} from 'common/js/mixin'
 
 export default {
+  mixins:[playlistMixin],
   components:{
     Slider,
     scroll,
@@ -70,6 +72,17 @@ export default {
     this._getDiscList()
   },
   methods:{
+    //mixin
+     handlePlaylist(playlist){
+         let bottom
+        if(playlist > 0){
+            bottom = '60px'
+        }else{
+            return
+        }
+       this.$refs.recommend.style.bottom = bottom
+       this.$refs.scroll.refresh()
+     },
     _getRecommend() {
       getRecommend().then((res) => {
         if (res.code === ERR_OK ) {

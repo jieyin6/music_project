@@ -11,6 +11,8 @@ Vue.use(Vuex)
 //vuex的调试工具
 const debug = process.env.NODE_ENV !== 'production'
 
+export const strict = false
+
 export default new Vuex.Store({
     actions,
     getters,

@@ -89,6 +89,9 @@ export default {
       this.height_group = []
   },
  methods:{
+     refresh(){
+         this.$refs.listview.refresh()
+     },
      //点击派发事件
      selectItem(item){
         this.$emit('select',item)

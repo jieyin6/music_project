@@ -38,11 +38,13 @@ import scroll from 'base/scroll'
 import loading from 'base/loading/loading'
 import {prefixStyle} from 'common/js/dom'
 import {mapActions} from 'vuex'
+import {playlistMixin} from 'common/js/mixin'
 
 const transform = prefixStyle('transform')
 const backdrop = prefixStyle('backdrop-filter')
 const RESERVED_HEIGHT = 40
 export default {
+mixins:[playlistMixin],
 props:{
     bgImage:{
         type:String,
@@ -86,6 +88,17 @@ mounted(){
     this.$refs.list.$el.style.top = `${this.imageHeight}px`
 },
 methods:{
+    handlePlaylist(playlist){
+        let bottom
+        if(playlist > 0){
+            bottom = '60px'
+        }else{
+            return
+        }
+      
+        this.$refs.list.$el.style.bottom = bottom
+        this.$refs.list.refresh()
+    },
     scroll(pos){
         this.scrollY = pos.y
     },
@@ -178,6 +191,7 @@ watch:{
          line-height: 40px;
          font-size: $font-size-large;
          color: $color-text;
+         @include no-wrap()
 
      }
     .bg-image{

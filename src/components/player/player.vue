@@ -17,15 +17,22 @@
               <h1 class="title" v-html="currentSong.name"></h1>
               <h2 class="subtitle" v-html="currentSong.singer"></h2>
           </div>
-        <div class="middle">
-          <!--   <div class="middle-l">
+        <div class="middle"
+             @touchstart.prevent = 'middleTouchstart'
+             @touchmove.prevent = 'middleTouchmove'
+             @touchend = 'middleTouchend'
+             >
+            <div class="middle-l" ref="middlel" >
                   <div class="cd-wrapper" ref="cdWrapper">
-                      <div class="cd" :class="cdClass">
+                      <div class="cd" :class="cdClass" >
                           <img class="image" :src="currentSong.image">
                       </div>
                   </div>
-              </div> -->
-               <scroll class="middle-r" ref="lyric.list">
+                  <div class="playing-lyric-wrapper">
+                      <div class="playing-lyric">{{playinglyric}}</div>
+                  </div>
+              </div> 
+               <scroll class="middle-r" ref="lyriclist">
                    
                   <div class="lyric-wrapper">
                       <div class="currentLyric" v-if="currentLyric">
@@ -41,6 +48,10 @@
               
           </div>
           <div class="bottom">
+            <div class="dot-wrapper">
+                <span class="dot" :class="{'active':currentShow === 'cd'}" ></span>
+                <span class="dot" :class="{'active':currentShow === 'lyric'}"></span>
+          </div>
              <div class="progress-wrapper">
                  <span class="time time-l">{{format(currentTime)}}</span>
                  <div class="progress-bar-wrapper">
@@ -109,6 +120,7 @@ import Song from 'common/js/song'
 import scroll from 'base/scroll'
 
 const transform = prefixStyle('transform')
+const transitionDuration = prefixStyle('transitionDuration')
 export default {
     components:{
         progressBar,
@@ -153,10 +165,69 @@ export default {
             currentTime:0,
             currentLyric:null,
             currentLineNum:0,
+            currentShow:'cd',
+            playinglyric:null
            
         }
     },
+    created(){
+        this.touch = {}
+    },
     methods:{
+        //滑动切换唱片或者歌词页面
+        middleTouchstart(e){
+            this.touch.initiated = true
+            this.touch.startX = e.touches[0].pageX
+            this.touch.startY = e.touches[0].pageY
+        },
+        middleTouchmove(e){
+            if( !this.touch.initiated){
+                return
+            }
+            let delaX = e.touches[0].pageX - this.touch.startX
+            let delaY = e.touches[0].pageY - this.touch.startY
+            //歌词纵向滚动
+          //  if (Math.abs(delaY) > Math.abs(delaX)) {
+            //    return
+          //  }
+            let left = this.currentShow === 'cd' ? 0 :-window.innerWidth
+            let offsetwidth = Math.min(0, Math.max(-window.innerWidth,left+delaX))
+            this.touch.percent = Math.abs(offsetwidth/window.innerWidth)
+            this.$refs.lyriclist.$el.style[transform] = `translate3d(${offsetwidth}px,0,0)`
+            this.$refs.lyriclist.$el.style[transitionDuration] = 0
+            this.$refs.middlel.style.opacity = 1 - this.touch.percent
+            this.$refs.middlel.style[transitionDuration] = 0
+        },
+        middleTouchend(){
+            let offsetwidth
+            //控制唱片的显示与隐藏
+            let opacity
+            if(this.currentShow === 'cd'){
+                if(this.touch.percent > 0.1){
+                    offsetwidth = -window.innerWidth
+                    this.currentShow = 'lyric'
+                    opacity = 0
+                }else{
+                    offsetwidth = 0
+                    opacity = 1
+                }
+
+                }else{
+                    if(this.touch.percent < 0.9){
+                        offsetwidth = 0
+                        this.currentShow = 'cd'
+                        opacity = 1
+                    }else{
+                        offsetwidth = -window.innerWidth
+                        opacity = 0
+                    }
+                }
+            const time = 300
+            this.$refs.lyriclist.$el.style[transform] = `translate3d(${offsetwidth}px,0,0)`
+            this.$refs.lyriclist.$el.style[transitionDuration] = `${time}ms`
+            this.$refs.middlel.style.opacity = opacity
+            this.$refs.middlel.style[transitionDuration] = `${time}ms`
+        },
         //获取音乐播放时间
         timeupdate(e){
             this.currentTime = e.target.currentTime
@@ -179,9 +250,14 @@ export default {
         },
         //改变歌曲播放的时间
         changePrecent(precent){
-            this.$refs.audio.currentTime = this.currentSong.duration * precent
+            const currenttime = this.currentSong.duration * precent
+            this.$refs.audio.currentTime = currenttime
             if(!this.playing){
                 this.togglePlaying()
+            }
+            if(this.currentLyric){
+                console.log(currenttime)
+                this.currentLyric.seek(currenttime * 1000)
             }
         },
         //改变播放模式
@@ -214,6 +290,9 @@ export default {
         loop(){
             this.$refs.audio.currentTime = 0
             this.$refs.audio.play()
+            if(this.currentLyric){
+                this.currentLyric.seek(0)
+            }
         },
         back(){
             this.setFullScreen(false)
@@ -271,30 +350,37 @@ export default {
             if(!this.songReady){
                 return
             }
-            let index = this.currentIndex - 1
-            if(index === -1){
-                index = this.playList.length - 1
-            }
-            this.setCurrentIndex(index)
-            //暂停时切换歌曲要改变按钮状态
-            if(!this.playing){
-                this.togglePlaying()
-            }
+            if(this.playList === 1){
+                this.loop()
+            }else{
+                let index = this.currentIndex - 1
+                if(index === -1){
+                    index = this.playList.length - 1
+                }
+                this.setCurrentIndex(index)
+                //暂停时切换歌曲要改变按钮状态
+                if(!this.playing){
+                    this.togglePlaying()
+                }
+             }
             this.songReady=false
         },
         next(){
              if(!this.songReady){
                 return
             }
-            let index = this.currentIndex + 1
-            if(index === this.playList.length){
-                index = 0
+            if(this.playList === 1){
+                this.loop()
+            }else{
+                let index = this.currentIndex + 1
+                if(index === this.playList.length){
+                    index = 0
+                }
+                this.setCurrentIndex(index)
+                if(!this.playing){
+                    this.togglePlaying()
+                }
             }
-            this.setCurrentIndex(index)
-             if(!this.playing){
-                this.togglePlaying()
-            }
-           
             this.songReady = false
         },
        
@@ -318,7 +404,9 @@ export default {
                 return
             }
             this.setPlaying(!this.playing)
-            
+            if(this.currentLyric){
+                this.currentLyric.togglePlay()
+            }
         },
         //获取歌词
         getLyric(){
@@ -329,10 +417,22 @@ export default {
                 if(this.playing){
                     this.currentLyric.play()
                 }
+               }).catch(()=>{
+                   this.currentLyric = '暂无歌词'
+                   this.playinglyric = ''
+                   this.currentLineNum = 0
                })
         },
         lyricHandler({lineNum,txt}){
             this.currentLineNum = lineNum
+            if(lineNum > 5){
+                //保证在屏幕中间
+                let el = this.$refs.lyricline[lineNum - 5]
+                this.$refs.lyriclist.scrollToElement(el,1000)
+            }else{
+                this.$refs.lyriclist.scrollToElement(0,0,1000)
+            }
+            this.playinglyric = txt
         },
         ...mapMutations({
             setFullScreen:'SET_FULL_SCREEN',
@@ -348,6 +448,9 @@ export default {
             if(newSong.id === oldSong.id){
                 return
             }
+            if(this.currentLyric){
+                this.currentLyric.stop()
+            }
             this.$nextTick(()=>{
                  this.$refs.audio.play()
                  this.getLyric()
@@ -355,9 +458,9 @@ export default {
         },
         playing(newplaying){
             let audio = this.$refs.audio
-            this.$nextTick (()=>{
+            setTimeout (()=>{
                  newplaying ? audio.play() : audio.pause()
-            })
+            },1000)
         }
     }
 }
@@ -460,6 +563,18 @@ export default {
                     }
                     
                 }
+                 .playing-lyric-wrapper{
+                    width: 80%;
+                    margin: 30px auto 0 auto;
+                    overflow: hidden;
+                    text-align: center;
+                        .playing-lyric{
+                             height: 20px;
+                             line-height: 20px;
+                             font-size: $font-size-medium;
+                             color: $color-text-l;
+                        }
+                 }
             }
             .middle-r{
                 display: inline-block;
@@ -498,7 +613,13 @@ export default {
                     height: 8px;
                     border-radius: 50%;
                     background: $color-text-l;
+                      &.active{
+                        width: 20px;
+                        border-radius: 5px;
+                        background: $color-text-ll;
+                      }
                 }
+
             }
             .progress-wrapper{
                 display: flex;
