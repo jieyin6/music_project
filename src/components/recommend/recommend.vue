@@ -75,7 +75,7 @@ export default {
     //mixin
      handlePlaylist(playlist){
          let bottom
-        if(playlist > 0){
+        if(playlist.length > 0){
             bottom = '60px'
         }else{
             return

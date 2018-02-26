@@ -2,7 +2,9 @@
   <scroll class="suggest" 
           :data='result'
           :pullUp='pullUp'
+          :beforeScroll = 'beforeScroll'
           @scrollToEnd='searchMore'
+          @beforeScroll='listScroll'
           ref="scroll"
           >
       <ul class="suggest-list">
@@ -16,6 +18,9 @@
           </li>
           <loading v-show="hasMore" title=""></loading>
       </ul>
+      <div class="no-result-wrapper" v-show=" !hasMore && !result.length">
+          <no-result title="抱歉，暂无搜索结果"></no-result>
+      </div>
   </scroll>
 </template> 
 
@@ -27,6 +32,7 @@ import {ERR_OK} from 'api/config'
 import {createSong} from 'common/js/song'
 import Singer from 'common/js/singer'
 import {mapMutations,mapActions} from 'vuex'
+import noResult from 'base/no-result/no-result'
 
 const prepage = 20
 
@@ -34,7 +40,8 @@ const TYPE_SINGER = 'singer'
 export default {
     components:{
         scroll,
-        loading
+        loading,
+        noResult
     },
     props:{
         query:{
@@ -52,7 +59,8 @@ export default {
             result:[],
             pullUp:true,
             //是否还有更多
-            hasMore:true
+            hasMore:true,
+            beforeScroll:false
         }
     },
     methods:{
@@ -139,6 +147,9 @@ export default {
             }
           
         },
+        listScroll(){
+            this.$emit('listScroll')
+        },
         ...mapMutations({
             setSinger:'SET_SINGER'
         }),
@@ -181,6 +192,12 @@ export default {
                 }
             }
         }
+    }
+    .no-result-wrapper{
+        position: absolute;
+        width: 100%;
+        top: 50%;
+        transform: translateY(-50%)
     }
 }
 </style>

@@ -30,13 +30,16 @@ export default {
     pullUp:{
         type:Boolean,
         default:false
+    },
+    //手机端搜索时滑动隐藏键盘
+    beforeScroll:{
+        type:Boolean,
+        default:false
     }
   },
   mounted(){
-      setTimeout(()=>{
-          this.scroll()
-      },20)
-  },
+      this.$nextTick(this.scroll())
+     },
  methods:{
      scroll(){
          if(!this.$refs.wrapper){
@@ -60,6 +63,11 @@ export default {
                      
                     this.$emit('scrollToEnd')
                 }
+            })
+        }
+        if(this.beforeScroll){
+            this.scroll.on('beforeScrollStart',()=>{
+                this.$emit('beforeScroll')
             })
         }
 
@@ -87,7 +95,8 @@ export default {
          setTimeout(()=>{
              this.refresh()
          },20)
-     }
+         
+  }
  }
 }
 </script>
