@@ -1,4 +1,5 @@
 import {playMode} from 'common/js/config'
+import {saveSearchlist} from 'common/js/catch'
 
 const state = {
     singer:{},
@@ -13,7 +14,9 @@ const state = {
     //歌单
     disc:{},
     //排行榜
-    toplist:{}
+    toplist:{},
+    //搜索历史 从本地读取数据
+    searchHistory:saveSearchlist()
 }
 
 export default state

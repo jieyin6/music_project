@@ -64,6 +64,9 @@ export default {
         }
     },
     methods:{
+        refresh(){
+            this.$refs.scroll.refresh()
+        },
         _search(){
             //query值改变时，加载到第一页的位置
             this.page = 1
@@ -145,7 +148,7 @@ export default {
             }else{
                this.insertSong(item)
             }
-          
+           this.$emit('select')
         },
         listScroll(){
             this.$emit('listScroll')

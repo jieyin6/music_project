@@ -3,23 +3,45 @@
     <div class="search-box-wrapper">
     <search-box ref="searchBox" @query="onQueryChange"></search-box>
     </div>
-    <div class="shortcut-wrapper" v-show="!query">
-        <div class='shortcut'>
-            <div class="hot-key">
-                <h1 class="title">热门搜索</h1>
-                <ul>
-                    <li v-for="song in hotMusic" 
-                       class="item"
-                       :key="song.n"
-                       @click="setQuery(song.k)"
-                       >{{song.k}}</li>
-                </ul>
+    <div class="shortcut-wrapper" v-show="!query" ref="shortcut">
+        <scroll class='shortcut' :data='alllist' ref="scroll" >
+            <div>
+                <div class="hot-key">
+                    <h1 class="title">热门搜索</h1>
+                    <ul>
+                     <li v-for="song in hotMusic" 
+                         class="item"
+                         :key="song.n"
+                         @click="setQuery(song.k)"
+                       >{{song.k}}
+                       </li>
+                    </ul>
+                </div>
+                <div class="search-history" v-show="this.searchHistory.length" >
+                    <h1 class="title">
+                        <span class="text">搜索历史</span>
+                        <span class="clear" @click="clearSearch">
+                            <i class="icon-clear"></i>
+                        </span>
+                    </h1>
+                    <search-list :searchlist = 'searchHistory'
+                             @select='setQuery'
+                             @delete='deleteSearch'
+                             ></search-list>
+                </div>
             </div>
-        </div>
+        </scroll>
     </div>
-    <div class="search-result" v-show="query">
-        <suggest @beforeScroll='blurInput' :query='query'></suggest>
+    <div class="search-result" v-show="query" ref="searchResult">
+        <suggest @select='saveSearch' 
+                @beforeScroll='blurInput'
+                :query='query'
+                ref="suggest"></suggest>
     </div>
+    <confirm ref="confirm"
+             text='确定要全部删除?'
+            @cancel='cancelDeleteAll'
+            @confirm='confirmDeleteAll'></confirm>
     <router-view></router-view>
   </div>
 </template>
@@ -29,11 +51,20 @@ import suggest from '../suggest/suggest'
 import searchBox from 'base/search-box/search-box'
 import {getHotMusic} from 'api/search'
 import {ERR_OK} from 'api/config'
+import {mapActions,mapGetters} from 'vuex'
+import searchList  from 'base/search-list/search-list'
+import confirm from 'base/confirm/confirm'
+import scroll from 'base/scroll'
+import {playlistMixin} from 'common/js/mixin'
 
 export default {
+    mixins:[playlistMixin],
     components:{
         searchBox,
-        suggest
+        suggest,
+        searchList,
+        confirm,
+        scroll
     },
     data(){
         return{
@@ -43,9 +74,41 @@ export default {
     },
     created(){
         this._getHotMusic()
+        
+    },
+    computed:{
+        alllist(){
+            return this.hotMusic.concat(this.searchHistory)
+        },
+         ...mapGetters([
+            'searchHistory',
+            'playList'
+         ]),
+    },
+    watch:{
+        query(newquery){
+            if(!newquery){
+                this.$nextTick(()=>{
+                     this.$refs.scroll.refresh()
+                })
+            }
+        }
     },
     methods:{
-        _getHotMusic(){
+         //mixin
+      handlePlaylist(playlist){
+         let bottom
+        if(playlist.length > 0){
+            bottom = '60px'
+        }else{
+            return
+        }
+       this.$refs.shortcut.style.bottom = bottom
+        this.$refs.scroll.refresh()
+        this.$refs.searchResult.style.bottom = bottom
+        this.$refs.suggest.refresh()
+      },
+       _getHotMusic(){
             getHotMusic().then((res)=>{
                 if(res.code === ERR_OK){
                     this.hotMusic = res.data.hotkey
@@ -61,7 +124,30 @@ export default {
         },
         blurInput(){
             this.$refs.searchBox.blur()
-        }
+        },
+        saveSearch(){
+            this.saveSearchHistory(this.query)
+        },
+       
+        deleteSearch(item){
+            this.deleteSearchHistory(item)
+        },
+        clearSearch(){
+            this.$refs.confirm.show()
+            
+        },
+        confirmDeleteAll(){
+            this.clearSearchHistory()
+            this.$refs.confirm.hide()
+        },
+        cancelDeleteAll(){
+            this.$refs.confirm.hide()
+        },
+        ...mapActions([
+            'saveSearchHistory',
+            'deleteSearchHistory',
+            'clearSearchHistory'
+        ])
     }
 
 }
@@ -97,6 +183,27 @@ export default {
                     background: $color-highlight-background;
                     font-size: $font-size-medium;
                     color: $color-text-d
+                }
+            }
+             .search-history{
+                position: relative;
+                margin: 0 20px;
+                .title{
+                    display: flex;
+                    align-items: center;
+                    height: 40px;
+                    font-size: $font-size-medium;
+                    color: $color-text-l;
+                    .text{
+                    flex: 1;
+                    }
+                    .clear{
+                    @include extend-click();
+                    .icon-clear{
+                        font-size: $font-size-medium;
+                        color: $color-text-d;
+                        }
+                    }
                 }
             }
         }

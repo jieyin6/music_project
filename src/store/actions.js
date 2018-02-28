@@ -1,6 +1,7 @@
 import * as types from './mutation-types'
 import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/until'
+import {saveSearch,deleteSearch,clearSearch} from 'common/js/catch'
 
 //当点击随机播放按钮时，调用的是randomplay action。此时再点击列表中的其他歌曲时
 //显示播放的还是随机播放时当前的歌曲。所以点击歌曲时，要先判断当前模式是否是随机
@@ -77,4 +78,16 @@ export const insertSong = function({commit,state},song){
     commit(types.SET_CURRENT_INDEX,currentindex)
     commit(types.SET_FULL_SCREEN,true)
     commit(types.SET_PlAYING,true)
+}
+
+export const saveSearchHistory = function({commit},query){
+   commit(types.SET_SEARCH_HISTORY,saveSearch(query))
+}
+
+export const deleteSearchHistory = function({commit},query){
+    commit(types.SET_SEARCH_HISTORY,deleteSearch(query))
+}
+
+export const clearSearchHistory = function({commit}){
+    commit(types.SET_SEARCH_HISTORY,clearSearch())
 }

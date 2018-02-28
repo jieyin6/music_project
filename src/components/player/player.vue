@@ -93,11 +93,12 @@
               <i :class="miniPlayIcon" class="icon-mini" @click.stop="togglePlaying"></i>
               </progress-circle>
           </div>
-          <div class="control">
+          <div class="control" @click.stop="showlist">
               <i class="icon-playlist"></i>
           </div>
       </div>
      </transition>
+     <play-list ref="playlist"></play-list>
      <audio :src="currentSong.url"
             ref="audio"
             @canplay="canplay"
@@ -118,6 +119,7 @@ import {shuffle} from 'common/js/until'
 import Lyric from 'lyric-parser'
 import Song from 'common/js/song'
 import scroll from 'base/scroll'
+import playList from '../play-list/play-list'
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
@@ -125,7 +127,8 @@ export default {
     components:{
         progressBar,
         progressCircle,
-        scroll
+        scroll,
+        playList
     },
     computed:{
         cdClass(){
@@ -174,6 +177,9 @@ export default {
         this.touch = {}
     },
     methods:{
+        showlist(){
+            this.$refs.playlist.show()
+        },
         //滑动切换唱片或者歌词页面
         middleTouchstart(e){
             this.touch.initiated = true
