@@ -115,15 +115,17 @@ import {prefixStyle} from 'common/js/dom'
 import progressBar from 'base/progress-bar/progress-bar'
 import progressCircle from 'base/progress-circle/progress-circle'
 import {playMode} from 'common/js/config'
-import {shuffle} from 'common/js/until'
+
 import Lyric from 'lyric-parser'
 import Song from 'common/js/song'
 import scroll from 'base/scroll'
 import playList from '../play-list/play-list'
+import {playerMixin} from 'common/js/mixin'
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
 export default {
+    mixins:[playerMixin],
     components:{
         progressBar,
         progressCircle,
@@ -147,20 +149,13 @@ export default {
         precent(){
             return this.currentTime/this.currentSong.duration
         },
-        playmode(){
-            return this.mode === playMode.sequence ? 'icon-sequence' :
-             this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-             
-        },
+       
+       
         ...mapGetters([
             'fullScreen',
-            'playList',
-            'currentSong',
             'playing',
             'currentIndex',
-            'mode',
-            'sequenceList'
-        ])
+            ])
     },
     data(){
         return{
@@ -266,25 +261,7 @@ export default {
                 this.currentLyric.seek(currenttime * 1000)
             }
         },
-        //改变播放模式
-        changeMode(){
-            const mode = (this.mode +1)%3
-            this.setMode(mode)
-            let list = null
-            if(this.mode === playMode.random){
-                list = shuffle(this.sequenceList)
-            }else{
-                list = this.sequenceList
-            }
-             this.resetCurrentIndex(list)
-             this.setPlaylist(list)
-        },
-         resetCurrentIndex(list){
-             let index = list.findIndex((item) => {
-                 return item.id === this.currentSong.id
-             })
-             this.setCurrentIndex(index)
-        },
+       
         //播放完毕调到下一首
         end(){
             if(this.mode === playMode.loop){
@@ -442,14 +419,14 @@ export default {
         },
         ...mapMutations({
             setFullScreen:'SET_FULL_SCREEN',
-            setPlaying:'SET_PlAYING',
-            setCurrentIndex:'SET_CURRENT_INDEX',
-            setMode:'SET_PLAY_MODE',
-            setPlaylist:'SET_PLATLIST'
-        })
+           })
     },
     watch:{
         currentSong(newSong,oldSong){
+            //playlist组件中歌曲被全部删掉后，没有newsong
+            if(!newSong.id){
+                return
+            }
             //歌曲暂停时切换模式会使歌曲重新播放，所以需要加个判断
             if(newSong.id === oldSong.id){
                 return

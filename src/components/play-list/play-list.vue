@@ -4,18 +4,18 @@
           <div class="list-wrapper" @click.stop>
             <div class="list-header">
                 <h1 class="title">
-                    <i class="icon"></i>
-                    <span class='text'></span>
-                    <span class="clear">
+                    <i class="icon" :class="playmode" @click="changeMode"></i>
+                    <span class='text'>{{modeText}}</span>
+                    <span class="clear" @click="showConfirm">
                         <i class="icon-clear"></i>
                     </span>
                 </h1>
              </div>  
              <scroll class="list-content" :data='sequenceList' ref="scroll">
-                 <ul>
+                 <transition-group name="list" tag="ul">
                  <li class="item" 
                      v-for="(item,index) in sequenceList"
-                     :key="index"
+                     :key="item.id"
                      @click="selectItem(item,index)"
                      ref="listItem"
                      >
@@ -24,11 +24,11 @@
                      <span class="like">
                          <i class="icon-not-favorite"></i>
                      </span>
-                     <span class="delete">
+                     <span class="delete" @click.stop="deleteOne(item)">
                          <i class="icon-delete"></i>
                      </span>
                  </li>
-                 </ul>
+                 </transition-group>
             </scroll> 
             <div class="list-operate">
                 <div class="add">
@@ -40,18 +40,26 @@
                 <span>关闭</span>
             </div>
           </div>
+         <confirm ref="confirm"
+                  text='确定删除列表全部？'
+                  @confirm='clearPlayList'
+                  @cancel='cancelClear'></confirm>
       </div>
   </transition>
 </template>
 
 <script>
-import {mapGetters,mapMutations} from 'vuex'
+import {mapActions} from 'vuex'
 import scroll from 'base/scroll'
 import {playMode} from 'common/js/config'
+import confirm from 'base/confirm/confirm'
+import {playerMixin} from 'common/js/mixin'
 
 export default {
+    mixins:[playerMixin],
     components:{
-        scroll
+        scroll,
+        confirm
     },
     data(){
         return{
@@ -59,14 +67,12 @@ export default {
         }
     },
     computed:{
-        ...mapGetters([
-            'sequenceList',
-            'currentSong',
-            'mode',
-            'playList'
-        ])
+        modeText(){
+            return this.mode === playMode.sequence ? '顺序播放' :
+            this.mode === playMode.loop ? '循环播放' : '随机播放'
+        }
     },
-    methods:{
+   methods:{
         show(){
             this.showFlag = true
             this.$nextTick(()=>{
@@ -99,10 +105,26 @@ export default {
             this.$refs.scroll.scrollToElement(this.$refs.listItem[index])
             
         },
-        ...mapMutations({
-            setCurrentIndex:'SET_CURRENT_INDEX',
-            setPlaying:'SET_PlAYING'
-        })
+        deleteOne(item){
+            this.deleteSong(item)
+            if(!this.playList.length){
+                this.hide()
+            }
+        },
+        showConfirm(){
+            this.$refs.confirm.show()
+        },
+        cancelClear(){
+            this.$refs.confirm.hide()
+        },
+        clearPlayList(){
+            this.clearPlayList()
+        },
+       
+        ...mapActions([
+            'deleteSong',
+            'clearPlayList'
+        ])
     },
     watch:{
         currentSong(newSong,oldSong){
@@ -126,19 +148,7 @@ export default {
     bottom: 0;
     z-index: 200;
     background-color: $color-background-d;
-    &.list-fade-enter-active,&.list-fade-leave-active{
-        transition: opacity 0.3s;
-        .list-wrapper{
-            transition: all 0.3s
-        }
-    }
-    &.list-fade-enter,&.list-fade-leave-to{
-        opacity: 0;
-        .list-wrapper{
-            transform: translate3d(0,100%,0)
-        }
-    }
-     .list-wrapper{
+    .list-wrapper{
             position: absolute;
             left: 0;
             bottom: 0;
@@ -240,6 +250,18 @@ export default {
         }
     }
 }
-
+.list-fade-enter-active,.list-fade-leave-active{
+        transition: opacity 0.3s;
+        .list-wrapper{
+            transition: all 0.3s
+        }
+    }
+.list-fade-enter,.list-fade-leave-to{
+        opacity: 0;
+        .list-wrapper{
+            transform: translate3d(0,100%,0)
+        }
+    }
+    
 
 </style>
