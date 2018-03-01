@@ -15,14 +15,14 @@
                  <transition-group name="list" tag="ul">
                  <li class="item" 
                      v-for="(item,index) in sequenceList"
-                     :key="item.id"
+                     :key="index"
                      @click="selectItem(item,index)"
                      ref="listItem"
                      >
                      <i class="current" :class="getCurrentCls(item)"></i>
                      <span class="text">{{item.name}}</span>
-                     <span class="like">
-                         <i class="icon-not-favorite"></i>
+                     <span class="like" @click.stop="toggleFavoriteIcon(item)">
+                         <i :class="getFavoriteIcon(item)"></i>
                      </span>
                      <span class="delete" @click.stop="deleteOne(item)">
                          <i class="icon-delete"></i>
@@ -54,11 +54,11 @@ import {mapActions} from 'vuex'
 import scroll from 'base/scroll'
 import {playMode} from 'common/js/config'
 import confirm from 'base/confirm/confirm'
-import {playerMixin} from 'common/js/mixin'
+import {playerMixin,favoriteMixin} from 'common/js/mixin'
 import addSong from '../add-song/add-song'
 
 export default {
-    mixins:[playerMixin],
+    mixins:[playerMixin,favoriteMixin],
     components:{
         scroll,
         confirm,

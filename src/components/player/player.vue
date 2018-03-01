@@ -73,7 +73,7 @@
                       <i class="icon-next"></i>
                   </div>
                   <div class="icon i-right">
-                      <i class=" icon icon-not-favorite"></i>
+                      <i class="icon" :class="getFavoriteIcon(currentSong)" @click="toggleFavoriteIcon(currentSong)"></i>
                   </div>
               </div>
           </div>
@@ -101,7 +101,7 @@
      <play-list ref="playlist"></play-list>
      <audio :src="currentSong.url"
             ref="audio"
-            @canplay="canplay"
+            @play="canplay"
             @error="error"
             @timeupdate="timeupdate"
             @ended="end"></audio>
@@ -120,12 +120,12 @@ import Lyric from 'lyric-parser'
 import Song from 'common/js/song'
 import scroll from 'base/scroll'
 import playList from '../play-list/play-list'
-import {playerMixin} from 'common/js/mixin'
+import {playerMixin,favoriteMixin} from 'common/js/mixin'
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
 export default {
-    mixins:[playerMixin],
+    mixins:[playerMixin,favoriteMixin],
     components:{
         progressBar,
         progressCircle,
@@ -155,6 +155,7 @@ export default {
             'fullScreen',
             'playing',
             'currentIndex',
+           
             ])
     },
     data(){
@@ -336,6 +337,7 @@ export default {
             }
             if(this.playList === 1){
                 this.loop()
+                return
             }else{
                 let index = this.currentIndex - 1
                 if(index === -1){
@@ -355,6 +357,7 @@ export default {
             }
             if(this.playList === 1){
                 this.loop()
+                return
             }else{
                 let index = this.currentIndex + 1
                 if(index === this.playList.length){
@@ -395,6 +398,9 @@ export default {
         //获取歌词
         getLyric(){
             this.currentSong.getLyric().then((lyric)=>{
+                if(this.currentSong.lyric !== lyric){
+                    return
+                }
                 this.currentLyric = new Lyric(lyric,this.lyricHandler)
                
                 console.log(this.currentLyric)
@@ -423,7 +429,7 @@ export default {
            }),
         ...mapActions([
             'savePlayHistory'
-        ])    
+            ])    
     },
     watch:{
         currentSong(newSong,oldSong){
@@ -437,13 +443,17 @@ export default {
             }
             if(this.currentLyric){
                 this.currentLyric.stop()
+                this.currentTime = 0
+                this.playinglyric = '';
+                this.currentLineNum = 0
             }
-            this.$nextTick(()=>{
+            clearTimeout(this.timer)
+            this.timer = setTimeout(()=>{
                 console.log(this.currentSong)
                 console.log(this.playing)
                 this.$refs.audio.play()
                  this.getLyric()
-            })
+            },1000)
         },
         playing(newplaying){
             let audio = this.$refs.audio

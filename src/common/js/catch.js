@@ -82,6 +82,7 @@ export function saveSearch(query){
         return item.id === song.id
      },maxFavoriteLength)
      storage.set(FAVORITE_KET,songs)
+     console.log(songs)
      return songs
  }
 
