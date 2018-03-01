@@ -3,6 +3,12 @@ import storage from 'good-storage'
 const SEARCH_KEY = '__search__'
 const maxLength = 15
 
+const PLAY_KEY = '__play__'
+const maxPlayLength = 200
+
+const FAVORITE_KET = '__favorite__'
+const maxFavoriteLength = 200
+
 //检查数组里有无重复 对数组的操作
 function insetArray(arr,val,compare,maxlen){
     let index = arr.findIndex(compare)
@@ -54,4 +60,40 @@ export function saveSearch(query){
  export function clearSearch(){
      storage.remove(SEARCH_KEY)
      return []
+ }
+
+ export function saveplayhistory(song){
+     let songs = storage.get(PLAY_KEY,[])
+     insetArray(songs,song,(item)=>{
+         return item.id === song.id
+     },maxPlayLength)
+     storage.set(PLAY_KEY,songs)
+     return songs
+ }
+
+ export function loadPlayHistory(){
+     return storage.get(PLAY_KEY,[])
+ }
+
+ //收藏列表
+ export function saveFavoritelist(song){
+     let songs = storage.get(FAVORITE_KET,[])
+     insetArray(songs,song,(item)=>{
+        return item.id === song.id
+     },maxFavoriteLength)
+     storage.set(FAVORITE_KET,songs)
+     return songs
+ }
+
+ export function deleteFavoritelist(song){
+     let songs = storage.get(FAVORITE_KET,[])
+     deleteFormArray(songs,(item)=>{
+         return item.id === song.id
+     })
+     storage.set(FAVORITE_KET,songs)
+     return songs
+ }
+
+ export function loadFavoriteList(){
+     return storage.get(FAVORITE_KET,[])
  }

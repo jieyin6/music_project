@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import {mapGetters,mapMutations} from 'vuex'
+import {mapGetters,mapMutations, mapActions} from 'vuex'
 import animations from 'create-keyframe-animation'
 import {prefixStyle} from 'common/js/dom'
 import progressBar from 'base/progress-bar/progress-bar'
@@ -325,6 +325,7 @@ export default {
         },
         canplay(){
             this.songReady = true
+            this.savePlayHistory(this.currentSong)
         },
         error(){
             this.songReady = true
@@ -419,7 +420,10 @@ export default {
         },
         ...mapMutations({
             setFullScreen:'SET_FULL_SCREEN',
-           })
+           }),
+        ...mapActions([
+            'savePlayHistory'
+        ])    
     },
     watch:{
         currentSong(newSong,oldSong){
@@ -429,13 +433,15 @@ export default {
             }
             //歌曲暂停时切换模式会使歌曲重新播放，所以需要加个判断
             if(newSong.id === oldSong.id){
-                return
+               return
             }
             if(this.currentLyric){
                 this.currentLyric.stop()
             }
             this.$nextTick(()=>{
-                 this.$refs.audio.play()
+                console.log(this.currentSong)
+                console.log(this.playing)
+                this.$refs.audio.play()
                  this.getLyric()
             })
         },

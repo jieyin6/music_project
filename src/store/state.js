@@ -1,5 +1,5 @@
 import {playMode} from 'common/js/config'
-import {saveSearchlist} from 'common/js/catch'
+import {saveSearchlist,loadPlayHistory,loadFavoriteList} from 'common/js/catch'
 
 const state = {
     singer:{},
@@ -16,7 +16,11 @@ const state = {
     //排行榜
     toplist:{},
     //搜索历史 从本地读取数据
-    searchHistory:saveSearchlist()
+    searchHistory:saveSearchlist(),
+    //播放历史
+    playHistory:loadPlayHistory(),
+    //收藏列表
+    favoriteList:loadFavoriteList()
 }
 
 export default state

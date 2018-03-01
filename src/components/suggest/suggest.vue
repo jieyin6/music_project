@@ -8,7 +8,7 @@
           ref="scroll"
           >
       <ul class="suggest-list">
-          <li @click="selectItem(item)" class="suggest-item" v-for="item in result" :key="item.id">
+          <li @click="selectItem(item)" class="suggest-item" v-for="(item,index) in result" :key="index">
               <div class="icon">
                   <i :class="getIconCla(item)"></i>
               </div>

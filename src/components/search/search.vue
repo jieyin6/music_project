@@ -55,10 +55,10 @@ import {mapActions,mapGetters} from 'vuex'
 import searchList  from 'base/search-list/search-list'
 import confirm from 'base/confirm/confirm'
 import scroll from 'base/scroll'
-import {playlistMixin} from 'common/js/mixin'
+import {playlistMixin,searchMixin} from 'common/js/mixin'
 
 export default {
-    mixins:[playlistMixin],
+    mixins:[playlistMixin,searchMixin],
     components:{
         searchBox,
         suggest,
@@ -81,8 +81,7 @@ export default {
             return this.hotMusic.concat(this.searchHistory)
         },
          ...mapGetters([
-            'searchHistory',
-            'playList'
+           'playList'
          ]),
     },
     watch:{
@@ -116,38 +115,21 @@ export default {
                 }
             })
         },
-        setQuery(query){
-            this.$refs.searchBox.setQuery(query)
-        },
         onQueryChange(query){
             this.query = query
         },
-        blurInput(){
-            this.$refs.searchBox.blur()
-        },
-        saveSearch(){
-            this.saveSearchHistory(this.query)
-        },
-       
-        deleteSearch(item){
-            this.deleteSearchHistory(item)
-        },
-        clearSearch(){
-            this.$refs.confirm.show()
-            
-        },
-        confirmDeleteAll(){
+       confirmDeleteAll(){
             this.clearSearchHistory()
             this.$refs.confirm.hide()
         },
         cancelDeleteAll(){
             this.$refs.confirm.hide()
         },
-        ...mapActions([
-            'saveSearchHistory',
-            'deleteSearchHistory',
-            'clearSearchHistory'
-        ])
+         clearSearch(){
+            this.$refs.confirm.show()
+            
+        },
+       
     }
 
 }

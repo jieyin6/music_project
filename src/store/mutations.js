@@ -32,6 +32,12 @@ const mutations = {
     },
     [types.SET_SEARCH_HISTORY](state,list){
         state.searchHistory = list
+    },
+    [types.SET_PLAY_HISTORY](state,list){
+        state.playHistory = list
+    },
+    [types.SET_FAVORITE_LIST](state,list){
+        state.favoriteList = list
     }
 }
 

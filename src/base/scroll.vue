@@ -92,10 +92,11 @@ export default {
  //观察数据变化就调用refresh方法
  watch:{
      data(){
-         setTimeout(()=>{
+         this.$nextTick(()=>{
              this.refresh()
-         },20)
-         
+         })
+             
+        
   }
  }
 }

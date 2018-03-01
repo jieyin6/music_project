@@ -1,7 +1,7 @@
 import * as types from './mutation-types'
 import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/until'
-import {saveSearch,deleteSearch,clearSearch} from 'common/js/catch'
+import {saveSearch,deleteSearch,clearSearch,saveplayhistory,saveFavoritelist,deleteFavoritelist} from 'common/js/catch'
 
 //当点击随机播放按钮时，调用的是randomplay action。此时再点击列表中的其他歌曲时
 //显示播放的还是随机播放时当前的歌曲。所以点击歌曲时，要先判断当前模式是否是随机
@@ -38,7 +38,7 @@ export const randomPlay = function({commit},{list}){
 }
 
 export const insertSong = function({commit,state},song){
-   
+   console.log(song)
     //Do not mutate vuex store state outside mutation handlers 会报错
     let playlist = state.playList.slice()
     let sequencelist = state.sequenceList.slice()
@@ -121,4 +121,16 @@ export const clearPlayList = function({commit}){
     commit(types.SET_SEQUENCE_LIST,[])
     commit(types.SET_CURRENT_INDEX,-1)
     commit(types.SET_PlAYING,false)
+}
+
+export const savePlayHistory = function({commit},song){
+    commit(types.SET_PLAY_HISTORY,saveplayhistory(song))
+}
+
+export const saveFavoriteList = function({commit},song){
+    commit(types.SET_FAVORITE_LIST,saveFavoritelist(song))
+}
+
+export const deleteFavoriteList = function({commit},song){
+    commit(types.SET_FAVORITE_LIST,deleteFavoritelist(song))
 }
